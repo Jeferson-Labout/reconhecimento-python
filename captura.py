@@ -1,0 +1,44 @@
+import cv2
+import numpy as np
+classificador = cv2.CascadeClassifier("haarcascade-frontalface-default.xml")
+classificadorOlho = cv2.CascadeClassifier("haarcascade-eye.xml")
+
+camera = cv2.VideoCapture(0)
+amostra = 1
+numeroAmostras = 100
+id = input('Digite seu identificador:')
+altura, largura= 220, 220
+print("Capturnado as faces")
+
+while True:
+
+    conectado, imagem = camera.read()
+    imagemCinza= cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+    print(np.average(imagemCinza))
+    facesDetectadas = classificador.detectMultiScale(imagemCinza,
+                                                     scaleFactor=1.5,
+                                                     minSize=(150,150))
+    for(x,y,l,a) in facesDetectadas:
+        cv2.rectangle (imagem,(x,y),(x+l, y+a),(255,0,0),1)
+        regiao = imagem[y:y + a, x:x + l]
+        regiaoCinzaOlho = cv2.cvtColor(regiao, cv2.COLOR_BGR2GRAY)
+        olhosDetectados = classificadorOlho.detectMultiScale(regiaoCinzaOlho)
+        for(ox,oy,ol,oa) in olhosDetectados:
+            cv2.rectangle(regiao, (ox, oy), (ox + ol, oy + oa),(0,255,0), 1)
+
+            if cv2.waitKey(1) & 0xFF== ord('c'):
+                if np.average(imagemCinza)>40:
+                    imagemFace = cv2.resize(imagemCinza[y:y + a, x:x + l], (largura, altura))
+                    cv2.imwrite("fotos/pessoa." + str(id) + "." + str(amostra) + ".jpg",imagemFace)
+                    print("[foto" + str(amostra) + "capturada com sucesso]")
+                    amostra +=1
+    cv2.imshow("Face", imagem)
+    #cv2.waitKey(1)
+    if(amostra >= numeroAmostras + 1):
+        break
+    cv2.imshow("Face", imagem)
+    if cv2.waitKey(1) == ord('s'):
+        break
+print("Faces capturadas com Sucesso...")
+camera.release()
+cv2.destroyAllWindows()
